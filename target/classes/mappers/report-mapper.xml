@@ -1,0 +1,37 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd" >
+<mapper namespace = "reportMapper">
+
+	<!-- report 맵  김이현-->
+	<resultMap id="reportResultSet" type="Report">
+		<id column="REPORT_ID" property="reportId" />
+		<result column="REPORT_CATEGORY" property="reportCategory" />
+		<result column="REPORT_WRITER" property="reportWriter" />
+		<result column="REPORT_CONTENT" property="reportContent" />
+		<result column="CREATE_DATE" property="createDate" />
+		<result column="STATUS" property="status" />
+		<result column="REPORT_CONTENT_CATEGORY" property="reportContentCategory" />
+		<result column="REPORT_CONTENT_ID" property="reportContentId" />
+	</resultMap>
+
+	<!--  신고 -->
+	<insert id="insertReport">
+	insert into report
+	VALUES(SEQ_RID.NEXTVAL,#{reportCategory}, #{reportWriter},
+	
+		<if test="#{reportContent} == null">
+			null,
+		</if>
+		<if test="#{reportContent} != null">
+			#{reportContent},
+		</if>
+	 SYSDATE, DEFAULT, #{reportContentCategory}, #{reportContentId})
+	</insert>
+
+	<!--  신고 취소 -->
+	<delete id="deleteReport">
+		delete from report
+		where REPORT_CONTENT_CATEGORY = #{reportContentCategory} and report_writer = #{reportWriter} and REPORT_CONTENT_ID = #{reportContentId}
+	</delete>
+
+</mapper>

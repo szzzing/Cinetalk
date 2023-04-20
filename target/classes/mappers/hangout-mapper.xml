@@ -1,0 +1,299 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd" >
+<mapper namespace = "hangoutMapper">
+	<select id="getListCount" resultType="_int">
+		select count(*)
+		from hangout
+			join board using(board_id)
+		where board.status='Y'
+	</select>
+	
+	<select id="selectAllHangoutList" resultMap="hangoutResultSet">
+		select *
+		from hangout
+			join board using(board_id)
+			join member on(id=board_writer)
+		where board.status='Y'
+		order by board_id desc
+	</select>
+	
+	<insert id="insertHangout">
+		insert all
+		into board
+		    values (seq_bid.nextval, #{boardTitle}, #{boardWriter}, #{boardContent}, 0, sysdate, sysdate, default)
+		into hangout
+		    values(
+		    	seq_bid.nextval, #{hangoutNumber},
+		    	<if test="movieId==null">
+					null,
+				</if>
+				<if test="movieId!=null">
+					#{movieId},
+				</if>
+				#{gender}, #{local}, #{age}, default, default)
+		select * from dual
+	</insert>
+	
+	<select id="selectHangout" resultMap="hangoutResultSet">
+		select *
+		from hangout
+			join board using(board_id)
+			join member on(id=board_writer)
+		where board_id=#{boardId} and board.status='Y'
+	</select>
+	
+	<update id="updateBoard">
+		update board
+		set
+		    board_title=#{boardTitle},
+		    board_content=#{boardContent},
+		    board_modify_date=sysdate
+		where board_id=#{boardId}
+	</update>
+	<update id="updateHangout">
+		update hangout
+		set
+		    hangout_number=#{hangoutNumber},
+		    <if test="movieId!=null">
+			    movie_id=#{movieId},
+		    </if>
+		    <if test="movieId==null">
+			    movie_id=null,
+		    </if>
+		    gender=#{gender},
+		    local=#{local},
+		    age=#{age},
+		    now_number=#{nowNumber}
+		    <if test="nowNumber>=hangoutNumber">
+				, is_close='Y'
+		    </if>
+		where board_id=#{boardId}
+	</update>
+	
+	<update id="deleteHangout">
+		update board
+		set status='N'
+		where board_id=#{boardId}
+	</update>
+	
+	<delete id="deleteAllInterest">
+		delete from interest
+		where board_id=#{boardId}
+	</delete>
+	
+	<delete id="deleteAllJoin">
+		delete from join
+		where board_id=#{boardId}
+	</delete>
+	
+	<update id="updateHangoutCount">
+		update board
+		set board_count=board_count+1
+		where board_id=#{boardId}
+	</update>
+	
+	<select id="isInterest" resultType="_int">
+		select count(*)
+		from interest
+		where member_id=#{id} and board_id=to_number(#{boardId})
+	</select>
+	
+	<insert id="insertInterest">
+		insert into interest
+		values(#{id}, to_number(#{boardId}))
+	</insert>
+	
+	<delete id="deleteInterest">
+		delete
+		from interest
+		where member_id=#{id} and board_id=to_number(#{boardId})
+	</delete>
+	
+	<select id="isJoin" resultType="_int">
+		select count(*)
+		from join
+		where member_id=#{id} and board_id=to_number(#{boardId})
+	</select>
+	
+	<insert id="insertJoin">
+		insert into join
+		values(#{id}, to_number(#{boardId}))
+	</insert>
+	
+	<delete id="deleteJoin">
+		delete
+		from join
+		where member_id=#{id} and board_id=to_number(#{boardId})
+	</delete>
+	
+	<update id="deleteAllComment">
+		update comments
+		set status='N'
+		where board_id=#{boardId}
+	</update>
+	
+	<select id="selectJoinCount" resultType="_int">
+		select count(*)
+		from join
+		where board_id=#{boardId}
+	</select>
+	
+	<select id="selectInterestCount" resultType="_int">
+		select count(*)
+		from interest
+		where board_id=#{boardId}
+	</select>
+	
+	<insert id="insertComment">
+		insert into comments
+		values (
+			seq_cid.nextval,
+			#{commentContent}, default, #{userId}, #{boardId},
+			<if test="commentCId==0">
+				null,
+			</if>
+			<if test="commentCId!=0">
+				#{commentCId},
+			</if>
+			sysdate, sysdate
+		)
+	</insert>
+	
+	<select id="selectAllCommentList" resultMap="hcommentResultSet">
+		select *
+		from comments
+			join member on(id=user_id)
+		where board_id=#{boardId} and comments.status='Y'
+		order by comment_id desc
+	</select>
+	
+	<select id="selectParentComment" resultMap="hcommentResultSet">
+		select *
+		from comments
+			join member on(id=user_id)
+		where board_id=#{boardId} and comment_cid is null and comments.status='Y'
+		order by comment_id desc
+	</select>
+	
+	<select id="selectChildComment" resultMap="hcommentResultSet">
+		select *
+		from comments
+			join member on(id=user_id)
+		where comment_cid=#{commentCId} and comments.status='Y'
+		order by comment_id asc
+	</select>
+	
+	<select id="selectComment" resultMap="hcommentResultSet">
+		select *
+		from comments
+			join member on(id=user_id)
+		where comment_id=#{commentId} and comments.status='Y'
+	</select>
+	
+	<select id="selectLastCommentId" resultType="_int">
+		select last_number
+		from user_sequences
+		where sequence_name='SEQ_CID'
+	</select>
+	
+	<update id="updateComment">
+		update comments
+		set comment_content=#{commentContent},
+		comment_modify_date=sysdate
+		where comment_id=#{commentId}
+	</update>
+	
+	<update id="deleteComment">
+		update comments
+		set status='N'
+		where (comment_id=#{commentId} or comment_cid=#{commentId}) and status='Y'
+	</update>
+	
+	<select id="searchHangout" resultMap="hangoutResultSet">
+		select *
+		from hangout
+			join board using(board_id)
+			join member on(id=board_writer)
+		where board.status='Y'
+		<if test='search!=null'>
+			and (instr(board_title, #{search})>0
+			or instr(board_content, #{search})>0)
+		</if>
+		<if test='local!="전체"'>
+			and hangout.local=#{local}
+		</if>
+		<if test='gender!="전체"'>
+			and hangout.gender=#{gender}
+		</if>
+		<if test='age!="전체"'>
+			and hangout.age=#{age}
+		</if>
+		<if test='hangoutNumber!="0"'>
+			and hangout.hangout_number=to_number(#{hangoutNumber})
+		</if>
+		order by board_id desc
+	</select>
+	
+	<select id="getSearchHangoutResultCount" resultType="_int">
+		select count(*)
+		from hangout
+			join board using(board_id)
+			join member on(id=board_writer)
+		where board.status='Y'
+		<if test='search!=null'>
+			and (instr(board_title, #{search})>0
+			or instr(board_content, #{search})>0)
+		</if>
+		<if test='local!="전체"'>
+			and hangout.local=#{local}
+		</if>
+		<if test='gender!="전체"'>
+			and hangout.gender=#{gender}
+		</if>
+		<if test='age!="전체"'>
+			and hangout.age=#{age}
+		</if>
+		<if test='hangoutNumber!="0"'>
+			and hangout.hangout_number=to_number(#{hangoutNumber})
+		</if>
+	</select>
+	
+	<!--  김이현 행아웃 신고 상태 -->
+	<select id="reportCount" resultType="_int">
+		select count(*)
+		from report
+		where report_writer = #{reportWriter} and REPORT_CONTENT_CATEGORY = #{reportContentCategory} and REPORT_CONTENT_ID = #{reportContentId} and status = 'Y'
+	</select>
+	
+	<resultMap id="hangoutResultSet" type="Hangout">
+		<id column="BOARD_ID" property="boardId" />
+		<result column="BOARD_TITLE" property="boardTitle" />
+		<result column="BOARD_WRITER" property="boardWriter" />
+		<result column="NICKNAME" property="nickName" />
+		<result column="BOARD_CONTENT" property="boardContent" />
+		<result column="BOARD_COUNT" property="boardCount" />
+		<result column="BOARD_CREATE_DATE" property="createDate" />
+		<result column="BOARD_MODIFY_DATE" property="modifyDate" />
+		<result column="STATUS" property="status" />
+		<result column="MOVIE_ID" property="movieId" />
+		<result column="HANGOUT_NUMBER" property="hangoutNumber" />
+		<result column="MOVIE_ID" property="movieId" />
+		<result column="GENDER" property="gender" />
+		<result column="LOCAL" property="local" />
+		<result column="AGE" property="age" />
+		<result column="NOW_NUMBER" property="nowNumber" />
+		<result column="IS_CLOSE" property="isClose" />
+	</resultMap>
+	
+	<resultMap id="hcommentResultSet" type="Hcomment">
+		<id column="COMMENT_ID" property="commentId" />
+		<result column="COMMENT_CONTENT" property="commentContent" />
+		<result column="STATUS" property="status" />
+		<result column="USER_ID" property="userId" />
+		<result column="NICKNAME" property="nickName" />
+		<result column="BOARD_ID" property="boardId" />
+		<result column="COMMENT_CID" property="commentCId" />
+		<result column="COMMENT_CREATE_DATE" property="commentCreateDate" />
+		<result column="COMMENT_MODIFY_DATE" property="commentModifyDate" />
+	</resultMap>	
+</mapper>

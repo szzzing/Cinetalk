@@ -1,0 +1,22 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE configuration PUBLIC "-//mybatis.org//DTD Config 3.0//EN" "http://mybatis.org/dtd/mybatis-3-config.dtd" >
+<configuration>
+	<typeAliases>
+		<typeAlias type="com.kh.cinetalk.member.model.vo.Member" alias="Member"/>
+		<typeAlias type="com.kh.cinetalk.review.model.vo.Review" alias="Review"/>
+		<typeAlias type="com.kh.cinetalk.hangout.model.vo.Hangout" alias="Hangout"/>
+		<typeAlias type="com.kh.cinetalk.report.model.vo.Report" alias="Report"/>
+		<typeAlias type="com.kh.cinetalk.review.model.vo.Rcomment" alias="Rcomment"/>
+		<typeAlias type="com.kh.cinetalk.hangout.model.vo.Hcomment" alias="Hcomment"/>
+		<typeAlias type="com.kh.cinetalk.review.model.vo.MovieLike" alias="MovieLike"/>
+		<typeAlias type="com.kh.cinetalk.mypage.model.vo.Comments" alias="MyPage"/>
+	</typeAliases>
+	<mappers>
+		<mapper resource="mappers/member-mapper.xml"></mapper>
+		<mapper resource="mappers/review-mapper.xml"></mapper>
+		<mapper resource="mappers/hangout-mapper.xml"></mapper>
+		<mapper resource="mappers/report-mapper.xml"></mapper>
+		<mapper resource="mappers/admin-mapper.xml"></mapper>
+		<mapper resource="mappers/mypage-mapper.xml"></mapper>
+	</mappers>
+</configuration>

@@ -1,0 +1,253 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd" >
+<mapper namespace="reviewMapper">
+	<insert id="insertMovieReview">
+		INSERT ALL
+		INTO BOARD VALUES(SEQ_BID.NEXTVAL,
+		#{boardTitle}, #{boardWriter},
+		#{boardContent}, default, sysdate,
+		sysdate, 'Y')
+		INTO REVIEW VALUES(SEQ_BID.NEXTVAL, #{movieId},
+		#{movieRating})
+		SELECT *
+		FROM DUAL
+	</insert>
+
+	<select id="movieReviewList" resultMap="reviewResultSet">
+		select BOARD_ID,
+		b.BOARD_TITLE,b.board_writer, m.NICKNAME, b.BOARD_CONTENT,
+		b.BOARD_COUNT, b.BOARD_CREATE_DATE, b.BOARD_MODIFY_DATE, b.STATUS,
+		r.MOVIE_ID, r.MOVIE_RATING
+		from board b
+		join member m on (board_writer =
+		m.id)
+		join review r using (board_id)
+		where r.movie_id = #{movieId} and
+		b.status = 'Y'
+		order by BOARD_MODIFY_DATE desc
+	</select>
+
+
+	<select id="reviewRating" resultMap="reviewResultSet">
+		select
+		round(avg(movie_rating), 1) movie_rating
+		from review r
+		join board b
+		using(board_id)
+		where movie_id = #{movieId} and b.status = 'Y'
+	</select>
+	<select id="selectAvgRating" resultType="_double">
+		select round(avg(movie_rating), 1)
+		from review
+			join board using(board_id)
+		where movie_id = #{movieId} and board.status='Y'
+	</select>
+	
+	<select id="selectReviewCount" resultType="_int">
+		select count(*)
+		from review
+			join board b using(board_id)
+		where movie_id = #{movieId} and b.status='Y'
+	</select>
+	
+<!-- 	세진 11/24 12:10 추가 -->
+	<select id="selectAllReviewCount" resultType="_int">
+		select count(*)
+		from review
+	</select>
+<!--  리뷰 맵  김이현-->
+	<resultMap id="reviewResultSet" type="Review">
+		<id column="BOARD_ID" property="boardId" />
+		<result column="BOARD_TITLE" property="boardTitle" />
+		<result column="BOARD_WRITER" property="boardWriter" />
+		<result column="NICKNAME" property="nickName" />
+		<result column="BOARD_CONTENT" property="boardContent" />
+		<result column="BOARD_COUNT" property="boardCount" />
+		<result column="BOARD_CREATE_DATE" property="createDate" />
+		<result column="BOARD_MODIFY_DATE" property="modifyDate" />
+		<result column="STATUS" property="status" />
+		<result column="MOVIE_ID" property="movieId" />
+		<result column="MOVIE_RATING" property="movieRating" />
+	</resultMap>
+
+<!--  조회수 증가  김이현-->
+	<update id="addCount">
+		update board
+		set BOARD_COUNT = BOARD_COUNT + 1
+		where BOARD_ID = #{boardId}
+	</update>
+
+<!--  영화 리뷰 상세 페이지 김이현-->
+	<select id="movieReviewDetail" resultMap="reviewResultSet">
+		select *
+		from board b
+		join member m on (board_writer = m.id)
+		join review r using (board_id)
+		where board_id = #{boardId} and b.status = 'Y'
+	</select>
+	
+	<!--  영화 리뷰 수정  김이현-->
+	<update id="updateMovieReview">
+	update board                                                                                                                                                                                                                                                                                                                                                                                                                                                                   
+	set board_title = #{boardTitle} , board_content = #{boardContent}, board_modify_date = sysdate
+	where board_id = #{boardId}
+	</update>
+	
+	<!--  영화 리뷰 평점 수정  김이현-->
+	<update id="updateMovieRating">
+	update review
+	set movie_rating = #{movieRating}
+	where board_id = #{boardId}
+	</update>
+	
+	<!--  영화 리뷰 삭제  김이현-->
+	<update id="deleteMovieReview">
+	update board
+	set status = 'N'
+	where board_id = #{boardId}
+	</update>
+
+	<!--  영화 리뷰 댓글 작성  김이현-->
+	<insert id="insertRcomment">
+		INSERT INTO COMMENTS
+		VALUES(SEQ_CID.NEXTVAL,
+		#{commentContent}, DEFAULT, #{userId}, #{boardId}, null, sysdate,
+		sysdate )
+	</insert>
+	
+	<!-- Rcomment맵  김이현-->
+	<resultMap id="rCommentResultSet" type="Rcomment">
+		<id column="COMMENT_ID" property="commentId" />
+		<result column="COMMENT_CONTENT" property="commentContent" />
+		<result column="STATUS" property="status" />
+		<result column="USER_ID" property="userId" />
+		<result column="NICKNAME" property="nickName" />
+		<result column="BOARD_ID" property="boardId" />
+		<result column="COMMENT_CREATE_DATE" property="commentCreateDate" />
+		<result column="COMMENT_MODIFY_DATE" property="commentModifyDate" />
+	</resultMap>
+
+	<!--  영화 리뷰 댓글 조회  김이현-->
+	<select id="selectRcomment" resultMap="rCommentResultSet">
+		select c.comment_id, c.comment_content, c.status, c.user_id,
+		c.board_id, c.comment_create_date, c.comment_modify_date, m.nickname
+		from COMMENTS c
+		join member m on ( m.id = c.user_id)
+		WHERE c.BOARD_ID = #{boardId} AND c.STATUS = 'Y'
+		order by c.comment_modify_date
+		
+	</select>
+	
+	<!--  영화 리뷰 댓글 수정  김이현-->
+	<update id="updateRcomment">
+	  update comments
+        set COMMENT_CONTENT = #{commentContent, jdbcType=VARCHAR}, COMMENT_MODIFY_DATE = sysdate
+        where COMMENT_ID = #{commentId}
+	</update>
+	
+	<!--  영화 리뷰 댓글 삭제  김이현-->
+	<update id="deleteRcomment">
+		update comments
+		set status = 'N'
+		where COMMENT_ID = #{commentId}
+	</update>
+	
+	<!--  영화 리뷰 댓글 이미 작성  김이현-->
+	<select id="rCommentAlready" resultType="_int">
+		select count(user_id)
+		from comments
+		where board_id = #{boardId} and user_id = #{userId} and status = 'Y'
+	</select>
+	
+	
+	<!--  영화 좋아요 버튼 삽입 김이현 -->
+	<insert id="insertMovieLike">
+		insert into movie_like values( #{movieId}, #{memberId})
+	</insert>
+	
+	<!--  영화 좋아요 확인 버튼 카운트 1이면 눌린 상태 -->
+	<select id="movieLikeCount" resultType="_int">
+		select count(*)
+		from movie_like
+		where movie_id = #{movieId} and member_id = #{memberId}
+	</select>
+	
+	<!--  movieLike 맵 -->
+	<resultMap id="movieLike" type="MovieLike">
+		<id column="MEMBER_ID" property="memberId" />
+		<result column="MOVIE_ID" property="movieId" />
+	</resultMap>
+	
+	<!-- 영화 좋아요 삭제 -->
+	<delete id="deleteMovieLike">
+		delete from movie_like
+		where movie_id = #{movieId} and member_id = #{memberId}
+	</delete>
+	
+	<!--  영화 좋아요 총 개수 -->
+	<select id="allHeartCount" resultType="_int">
+	select count(*)
+	from movie_like
+	where movie_id = #{movieId}
+	</select>
+	
+	<!--  영화 리뷰에 좋아요  -->
+	<insert id="insertLike">
+		insert into likes values( #{memberId}, #{boardId})
+	</insert>
+	
+	<!--  영화 리뷰에 좋아요 삭제 -->
+	<delete id="deleteLike">
+		delete from likes
+		where member_id = #{memberId} and board_id = #{boardId}
+	</delete>
+	
+	<!--  영화 리뷰에 좋아요 눌린 상태 확인 1이면 눌린 것 -->
+		<select id="likeCount" resultType="_int">
+		select count(*)
+		from likes
+		where board_id = #{boardId} and member_id = #{memberId}
+	</select>
+	
+	<!--  영화 리뷰에 댓글 총 좋아요 개수 -->
+	<select id="allLikeCount" resultType="_int">
+	select count(*)
+	from likes
+	where board_id = #{boardId}
+	</select>
+	
+	<!--  영화 리뷰에 댓글 총 개수 -->
+	<select id="allCommentCount" resultType="_int">
+	select count(*)
+	from comments
+	where board_id = #{boardId} and status = 'Y'
+	</select>
+	
+	<!-- report 맵  김이현-->
+	<resultMap id="reportResultSet" type="Report">
+		<id column="REPORT_ID" property="reportId" />
+		<result column="REPORT_CATEGORY" property="reportCategory" />
+		<result column="REPORT_WRITER" property="reportWriter" />
+		<result column="REPORT_CONTENT" property="reportContent" />
+		<result column="CREATE_DATE" property="createDate" />
+		<result column="STATUS" property="status" />
+		<result column="REPORT_CONTENT_CATEGORY" property="reportContentCategory" />
+		<result column="REPORT_CONTENT_ID" property="reportContentId" />
+	</resultMap>
+	
+	<!--  영화 리뷰 신고 상태 -->
+	<select id="reportCount" resultType="_int">
+	select count(*)
+	from report
+	where report_writer = #{reportWriter} and REPORT_CONTENT_CATEGORY = #{reportContentCategory} and REPORT_CONTENT_ID = #{reportContentId} and status = 'Y'
+	</select>
+	
+	<!-- 영화 리뷰 댓글 신고 상태 값 -->
+	<select id="commentReportCount" resultType="_int">
+	select count(*)
+	from report
+	where report_writer = #{reportWriter} and REPORT_CONTENT_CATEGORY = #{reportContentCategory} and REPORT_CONTENT_ID = #{reportContentId} and status = 'Y'
+	</select>
+	
+	
+</mapper>

@@ -1,0 +1,289 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd" >
+<mapper namespace = "adminMapper">
+	
+	<!-- 멤버 관련 -->
+	
+	<select id="selectNewMember" resultMap="memberResultSet">
+		select *
+		from member
+		where to_char(enroll_date, 'yyyymmdd')=to_char(sysdate, 'yyyymmdd') and status='Y'
+		order by enroll_date desc
+	</select>
+	
+	<select id="selectNewMemberCount" resultType="_int">
+		select count(*)
+		from member
+		where to_char(enroll_date, 'yyyymmdd')=to_char(sysdate, 'yyyymmdd') and status='Y'
+	</select>
+	
+	<select id="selectAllMember" resultMap="memberResultSet">
+		select *
+		from member
+		order by enroll_date desc
+	</select>
+
+	<select id="selectReviewCount" resultType="_int">
+		select count(*)
+		from review
+		    join board using(board_id)
+		    join member on(board_writer=id)
+		where id=#{id} and board.status='Y'
+	</select>
+	
+	<select id="searchMember" resultMap="memberResultSet">
+		select *
+		from member
+		where status='Y'
+		<if test="category=='all'">
+			and (
+				instr(id, #{searchValue})>0
+				or instr(name, #{searchValue})>0
+				or instr(nickname, #{searchValue})>0
+			)
+		</if>
+		<if test="category=='id'">
+		and instr(id, #{searchValue})>0
+		</if>
+		<if test="category=='name'">
+		and instr(name, #{searchValue})>0
+		</if>
+		<if test="category=='nickName'">
+		and instr(nickname, #{searchValue})>0
+		</if>
+		order by enroll_date desc
+	</select>
+	
+	<update id="deleteMember">
+		update member
+		set status='N'
+		where id=#{id}
+	</update>
+	
+	
+	<!-- 리뷰 관련 -->
+	
+	<select id="searchReview" resultMap="reviewResultSet">
+		select board_id, board_title, board_content, nickname, movie_id, movie_rating, board_create_date
+		from review
+		    join board using(board_id)
+		    join member on(board_writer=id)
+		where board.status='Y'
+		<if test="category=='all'">
+			and (
+				instr(board_title, #{searchValue})>0
+				or instr(board_content, #{searchValue})>0
+				or instr(id, #{searchValue})>0
+				or instr(name, #{searchValue})>0
+				or instr(nickname, #{searchValue})>0
+			)
+		</if>
+		<if test="category=='title'">
+			and instr(board_title, #{searchValue})>0
+		</if>
+		<if test="category=='content'">
+			and instr(board_content, #{searchValue})>0
+		</if>
+		<if test="category=='writer'">
+			and (
+				instr(id, #{searchValue})>0
+				or instr(name, #{searchValue})>0
+				or instr(nickname, #{searchValue})>0
+			)
+		</if>
+		order by board_id desc
+	</select>
+	
+	<select id="selectNewReview" resultMap="reviewResultSet">
+		select board_id, board_title, board_content, nickname, movie_id, movie_rating, board_create_date
+		from review
+		    join board using(board_id)
+		    join member on(board_writer=id)
+		where to_char(board_create_date, 'yyyymmdd')=to_char(sysdate, 'yyyymmdd') and board.status='Y'
+		order by board_id desc
+	</select>
+	
+	<select id="selectNewReviewCount" resultType="_int">
+		select count(*)
+		from review
+			join board using(board_id)
+		where to_char(board_create_date, 'yyyymmdd')=to_char(sysdate, 'yyyymmdd') and status='Y'
+	</select>
+	
+	<select id="selectAllReview" resultMap="reviewResultSet">
+		select board_id, board_title, board_content, nickname, movie_id, movie_rating, board_create_date
+		from review
+		    join board using(board_id)
+		    join member on(board_writer=id)
+		where board.status = 'Y'
+		order by board_id desc
+	</select>
+	
+	<update id = "deleteMovieReview">
+		update board
+		set status = 'N'
+		where board_id = #{boardId}
+	</update>
+	
+	<!-- 모임관련 -->
+	<update id = "deleteHangout">
+		update board
+		set status = 'N'
+		where board_id = #{boardId}
+	</update>
+	
+	<select id = "selectAllHangout" resultMap="hangoutResultSet">
+		select board_id, board_writer, board_title, board_create_date
+		from hangout
+		    join board using(board_id)
+		    join member on(board_writer=id)
+		where board.status='Y'
+		order by board_id desc
+	</select>
+	
+	<select id="searchHangout" resultMap="hangoutResultSet">
+		select board_id, board_title, board_content, board_writer, board_create_date
+		from hangout
+		    join board using(board_id)
+		    join member on(board_writer=id)
+		where board.status='Y'
+		<if test="category=='all'">
+			and (
+				instr(board_title, #{searchValue})>0
+				or instr(board_writer, #{searchValue})>0
+				or instr(board_content, #{searchValue})>0
+			)
+		</if>
+		<if test="category=='title'">
+			and instr(board_title, #{searchValue})>0
+		</if>
+		<if test="category=='content'">
+			and instr(board_content, #{searchValue})>0
+		</if>
+		<if test="category=='writer'">
+			and (
+				instr(id, #{searchValue})>0
+				or instr(name, #{searchValue})>0
+				or instr(nickname, #{searchValue})>0
+			)
+		</if>
+		order by board_id desc
+	</select>
+	
+	
+	<!-- 신고 관련 -->
+	
+	<select id = "selectAllReport" resultMap = "reportResultSet">
+		select *
+		from report
+			join board on(board_id = report_content_id)
+		where board.status = 'Y'
+		order by create_date desc
+	</select>
+	
+	<select id = "selectRpedList" resultType = "String">
+		select board_writer, board_title
+		from board
+			join report on(board_id = report_content_id)
+			join review 
+		where board_id = #{bId}
+	</select>
+	
+	<select id="selectAllReviewReport" resultMap="reportResultSet">
+		select *
+		from report
+			join board on(board_id = report_content_id)
+		where report_content_category='r'
+			and board.status = 'Y'
+	</select>
+	
+	<select id="selectAllHangoutReport" resultMap="reportResultSet">
+		select *
+		from report
+			join board on(board_id = report_content_id)
+		where report_content_category='h'
+			and board.status = 'Y'
+	</select>
+	
+	<select id="selectReview" resultMap="reviewResultSet">
+		select *
+		from review
+			join board using(board_id)
+		where board_id=#{reportContentId}
+	</select>
+	
+	<select id="selectHangout" resultMap="hangoutResultSet">
+		select *
+		from hangout
+			join board using(board_id)
+		where board_id=#{reportContentId}
+	</select>
+	
+	<update id = "deleteReportBoard">
+		update board
+		set status = 'N'
+		where board_id=#{bId}
+	</update>
+	
+	
+	<resultMap id="memberResultSet" type="Member">
+		<id column = "ID" property = "id"/>
+		<result column = "PWD" property = "pwd"/>
+		<result column = "NAME" property = "name"/>
+		<result column = "NICKNAME" property = "nickName"/>
+		<result column = "EMAIL" property = "email"/>
+		<result column = "BIRTHDAY" property = "birthDay"/>
+		<result column = "GENDER" property = "gender"/>
+		<result column = "PHONE" property = "phone"/>
+		<result column = "ENROLL_DATE" property = "enrollDate"/>
+		<result column = "UPDATE_DATE" property = "updateDate"/>
+		<result column = "STATUS" property = "status"/>
+		<result column = "IS_ADMIN" property = "isAdmin"/>
+	</resultMap>
+	
+	<resultMap id="reviewResultSet" type="Review">
+		<id column="BOARD_ID" property="boardId"/>
+		<result column="BOARD_TITLE" property="boardTitle"/>
+		<result column="BOARD_WRITER" property="boardWriter"/>
+		<result column="NICKNAME" property="nickName"/>
+		<result column="BOARD_CONTENT" property="boardContent"/>
+		<result column="BOARD_COUNT" property="boardCount"/>
+		<result column="BOARD_CREATE_DATE" property="createDate"/>
+		<result column="BOARD_MODIFY_DATE" property="modifyDate"/>
+		<result column="BOARD_STATUS" property="status"/>
+		<result column="MOVIE_ID" property="movieId"/>
+		<result column="MOVIE_RATING" property="movieRating"/>
+	</resultMap>
+	
+	<resultMap id="hangoutResultSet" type="Hangout">
+		<id column="BOARD_ID" property="boardId"/>
+		<result column="BOARD_TITLE" property="boardTitle"/>
+		<result column="BOARD_WRITER" property="boardWriter"/>
+		<result column="NICKNAME" property="nickName"/>
+		<result column="BOARD_CONTENT" property="boardContent"/>
+		<result column="BOARD_COUNT" property="boardCount"/>
+		<result column="BOARD_CREATE_DATE" property="createDate"/>
+		<result column="BOARD_MODIFY_DATE" property="modifyDate"/>
+		<result column="BOARD_STATUS" property="status"/>
+		<result column="HANGOUT_NUMBER" property="hangoutNumber"/>
+		<result column="MOVIE_ID" property="movieId"/>
+		<result column="GENDER" property="gender"/>
+		<result column="LOCAL" property="local"/>
+		<result column="AGE" property="age"/>
+		<result column="NOW_NUMBER" property="nowNumber"/>
+		<result column="IS_CLOSE" property="isClose"/>
+	</resultMap>
+	
+	<resultMap id = "reportResultSet" type = "Report">
+		<id column = "REPORT_ID" property = "reportId"/>
+		<result column = "REPORT_CATEGORY" property = "reportCategory"/>
+		<result column = "REPORT_WRITER" property = "reportWriter"/>
+		<result column = "REPORT_CONTENT" property = "reportContent"/>
+		<result column = "CREATE_DATE" property = "createDate"/>
+		<result column = "STATUS" property = "status"/>
+		<result column = "REPORT_CONTENT_CATEGORY" property = "reportContentCategory"/>
+		<result column = "REPORT_CONTENT_ID" property = "reportContentId"/>
+		
+	</resultMap>
+	
+</mapper>

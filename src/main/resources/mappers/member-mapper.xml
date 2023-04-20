@@ -1,0 +1,111 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd" >
+<mapper namespace = "memberMapper">
+	<select id = "login" resultMap = "memberResultSet">
+		select * from member
+		where id = #{id}
+			and status = 'Y'
+	</select>
+	
+	<resultMap type = "Member" id = "memberResultSet">
+		<id column = "ID" property = "id"/>
+		<result column = "PWD" property = "pwd"/>
+		<result column = "NAME" property = "name"/>
+		<result column = "NICKNAME" property = "nickName"/>
+		<result column = "EMAIL" property = "email"/>
+		<result column = "BIRTHDAY" property = "birthDay"/>
+		<result column = "GENDER" property = "gender"/>
+		<result column = "PHONE" property = "phone"/>
+		<result column = "ENROLL_DATE" property = "enrollDate"/>
+		<result column = "UPDATE_DATE" property = "updateDate"/>
+		<result column = "STATUS" property = "status"/>
+		<result column = "IS_ADMIN" property = "isAdmin"/>
+	</resultMap>
+	
+	<insert id = "insertMember">
+		insert into member
+		values(#{id}, #{pwd}, #{name}, #{nickName}, #{email}, #{birthDay}, #{gender}, #{phone}, sysdate, sysdate, default, default)
+	</insert>
+	
+	<select id = "checkId" resultType = "_int">
+		select count(*)
+		from member
+		where id = #{id}
+	</select>
+	
+	<select id = "checkNickName" resultType = "_int">
+		select count(*)
+		from member
+		where nickname = #{nickName}
+	</select>
+	
+	<select id = "searchList" resultMap = "hangoutResultSet">
+		select *
+		from board
+			join hangout using(board_id)
+			join member on(id = board_writer)
+		where board.status = 'Y'
+			and board_title like '%' || #{keyword} || '%'
+			or board_content like '%' || #{keyword} || '%'
+			and is_close is not null
+		order by board_id desc
+	</select>
+	
+	<select id = "countReview">
+		select count(board_id)
+   		 from review
+        	join board using(board_id)
+		where board.status = 'Y';
+	</select>
+	
+	<select id = "checkMember" resultType="_int" parameterType = "com.kh.cinetalk.member.model.vo.Email">
+		select count(*)
+		from member
+		where name = #{name} and email = #{email}
+	</select>
+	
+	<select id = "getId" resultType="String" parameterType = "com.kh.cinetalk.member.model.vo.Email">
+		select id
+		from member
+		where name = #{name}
+	</select>
+	
+	<update id = "updateTempPwd" parameterType = "HashMap">
+		update member
+		set pwd = #{encTempPwd}
+		where email = #{email}
+			and status = 'Y'
+	</update>
+	
+	<update id = "updateMember">
+      	update member
+	    set name = #{name}, nickname = #{nickName}, email = #{email}, phone = #{phone}, update_date=default
+	    where id = #{id}
+	 </update>
+	 
+	 <update id = "updatePwd" parameterType="HashMap">
+	    update member
+	    set pwd = #{newPwd}
+	    where id = #{id}
+	 </update>
+	
+	<resultMap id="hangoutResultSet" type="Hangout">
+		<id column="BOARD_ID" property="boardId" />
+		<result column="BOARD_TITLE" property="boardTitle" />
+		<result column="BOARD_WRITER" property="boardWriter" />
+		<result column="NICKNAME" property="nickName" />
+		<result column="BOARD_CONTENT" property="boardContent" />
+		<result column="BOARD_COUNT" property="boardCount" />
+		<result column="BOARD_CREATE_DATE" property="createDate" />
+		<result column="BOARD_MODIFY_DATE" property="modifyDate" />
+		<result column="STATUS" property="status" />
+		<result column="MOVIE_ID" property="movieId" />
+		<result column="HANGOUT_NUMBER" property="hangoutNumber" />
+		<result column="MOVIE_ID" property="movieId" />
+		<result column="GENDER" property="gender" />
+		<result column="LOCAL" property="local" />
+		<result column="AGE" property="age" />
+		<result column="NOW_NUMBER" property="nowNumber" />
+		<result column="IS_CLOSE" property="isClose" />
+	</resultMap>
+</mapper>
