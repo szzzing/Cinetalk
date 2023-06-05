@@ -5,4 +5,4 @@
 
 
 ### 🔗
-https://broken-toucan-733.notion.site/CINETALK-95a6d35251444b2cbe155f070170fd70
+https://broken-toucan-733.notion.site/CINETALK-95a6d35251444b2cbe155f070170fd70 
